@@ -1,0 +1,1 @@
+cmd_/home/zzk/KernelCodeMapping/kmalloc_mapping/lkm/kmalloc_mapping.mod := { echo  /home/zzk/KernelCodeMapping/kmalloc_mapping/lkm/kmalloc_mapping.o;  echo; } > /home/zzk/KernelCodeMapping/kmalloc_mapping/lkm/kmalloc_mapping.mod

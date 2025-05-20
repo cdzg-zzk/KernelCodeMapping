@@ -1,0 +1,1 @@
+cmd_/home/zzk/KernelCodeMapping/kmalloc_mapping/function/test_fun.mod := { echo  /home/zzk/KernelCodeMapping/kmalloc_mapping/function/test_fun.o;  echo; } > /home/zzk/KernelCodeMapping/kmalloc_mapping/function/test_fun.mod

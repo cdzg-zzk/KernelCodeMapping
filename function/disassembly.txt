@@ -1,0 +1,15 @@
+
+text_section.bin:     file format binary
+
+
+Disassembly of section .data:
+
+ffffffffc08a4000 <.data>:
+ffffffffc08a4000:	0f 1f 44 00 00       	nopl   0x0(%rax,%rax,1)
+ffffffffc08a4005:	55                   	push   %rbp
+ffffffffc08a4006:	8d 04 77             	lea    (%rdi,%rsi,2),%eax
+ffffffffc08a4009:	48 89 e5             	mov    %rsp,%rbp
+ffffffffc08a400c:	5d                   	pop    %rbp
+ffffffffc08a400d:	e9 ae e2 55 d5       	jmpq   0xffffffff95e022c0
+ffffffffc08a4012:	e9 a9 e2 55 d5       	jmpq   0xffffffff95e022c0
+	...

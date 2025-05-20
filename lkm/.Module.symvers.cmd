@@ -1,0 +1,1 @@
+cmd_/home/zzk/KernelCodeMapping/kmalloc_mapping/lkm/Module.symvers := sed 's/\.ko$$/\.o/' /home/zzk/KernelCodeMapping/kmalloc_mapping/lkm/modules.order | scripts/mod/modpost -m -a  -o /home/zzk/KernelCodeMapping/kmalloc_mapping/lkm/Module.symvers -e -i Module.symvers   -T -
