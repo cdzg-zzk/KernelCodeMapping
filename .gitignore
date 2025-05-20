@@ -1,0 +1,9 @@
+# ignore
+*.cmd*
+*.o*
+*.mod*
+*.ko*
+modules.order
+Module.symvers
+
+/disassemble/*.txt

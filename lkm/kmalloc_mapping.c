@@ -60,7 +60,8 @@ static noinline int test_fun(int base)
     } else {
         ret = val2 - val1;
     }
-    return extern_test_fun(base, ret);
+    // return extern_test_fun(base, ret);
+    return ret;
 }
 
 static noinline int test_fun2(int x)

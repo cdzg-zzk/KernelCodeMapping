@@ -1,1 +1,0 @@
-cmd_/home/zzk/KernelCodeMapping/kmalloc_mapping/lkm/kmalloc_mapping.ko := ld -r  -m elf_x86_64 -z noexecstack   --build-id=sha1  -T scripts/module.lds -o /home/zzk/KernelCodeMapping/kmalloc_mapping/lkm/kmalloc_mapping.ko /home/zzk/KernelCodeMapping/kmalloc_mapping/lkm/kmalloc_mapping.o /home/zzk/KernelCodeMapping/kmalloc_mapping/lkm/kmalloc_mapping.mod.o;  true
