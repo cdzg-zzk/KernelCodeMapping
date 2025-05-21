@@ -2,7 +2,7 @@
 
 # === 用户配置 ===
 MODNAME="$1"
-VMLINUX_PATH="/boot/vmlinuz-5.15.0-136-generic"  # 可调整
+VMLINUX_PATH="/boot/vmlinuz-$(uname -r)"  # 可调整
 DUMP_SIZE=0x1000  # 可调整
 TMP_GDB_SCRIPT="dump.gdb"
 TEXT_BIN="text_section.bin"

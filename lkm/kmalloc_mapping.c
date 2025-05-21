@@ -186,145 +186,144 @@ int pmd_huge(pmd_t pmd)
 //     return -1;
 // }
 // EXPORT_SYMBOL(get_page_table);
-// int modify_page_table(unsigned long addr, unsigned long pfn, bool read_flag, bool write_flag, bool exec_flag)
-// {
-//     printk(KERN_INFO "%s\n", __func__);
-//     pgd_t *pgd;
-//     p4d_t *p4d;
-//     pud_t *pud;
-//     pmd_t *pmd;
-//     pte_t *pte;
-//     struct mm_struct *mm = current->mm;
-//     if(!mm) {
-//         printk(KERN_ERR "No mm_struct for current process\n");
-//         return 1;
-//     }
-//     pgd = pgd_offset(mm, addr);
-//     if(pgd_none(*pgd) || pgd_bad(*pgd)) {
-//         printk(KERN_INFO "PGD invalid or not present for address 0x%lx\n", addr);
-//          return 2;
-//     }
-//     printk(KERN_INFO "PGD found at %px, value: 0x%lx\n", pgd, pgd_val(*pgd));
-//      printk(KERN_INFO "Protection bits: %s%s%s\n", 
-//         (pgd_val(*pgd) & _PAGE_USER) ? "USER " : "", 
-//         (pgd_val(*pgd) & _PAGE_RW) ? "RW " : "RO ",
-//         (pgd_val(*pgd) & _PAGE_NX) ? "NO-EXEC" : "EXEC"); 
+int modify_page_table(unsigned long addr, unsigned long pfn, bool read_flag, bool write_flag, bool exec_flag)
+{
+    printk(KERN_INFO "%s\n", __func__);
+    pgd_t *pgd;
+    p4d_t *p4d;
+    pud_t *pud;
+    pmd_t *pmd;
+    pte_t *pte;
+    struct mm_struct *mm = current->mm;
+    if(!mm) {
+        printk(KERN_ERR "No mm_struct for current process\n");
+        return 1;
+    }
+    pgd = pgd_offset(mm, addr);
+    if(pgd_none(*pgd) || pgd_bad(*pgd)) {
+        printk(KERN_INFO "PGD invalid or not present for address 0x%lx\n", addr);
+         return 2;
+    }
+    printk(KERN_INFO "PGD found at %p, value: 0x%lx\n", pgd, pgd_val(*pgd));
+    printk(KERN_INFO "Protection bits: %s%s%s\n", 
+        (pgd_val(*pgd) & _PAGE_USER) ? "USER " : "", 
+        (pgd_val(*pgd) & _PAGE_RW) ? "RW " : "RO ",
+        (pgd_val(*pgd) & _PAGE_NX) ? "NO-EXEC" : "EXEC"); 
 
 
-//     printk(KERN_INFO "if have p4d: %d\n", pgtable_l5_enabled());
-//     p4d = p4d_offset(pgd, addr);
-//     if(p4d_none(*p4d) || p4d_bad(*p4d)) {
-//         printk(KERN_INFO "P4D invalid or not present for address 0x%lx\n", addr);
-//          return 3;
-//     }
-//     printk(KERN_INFO "P4D found at %px, value: 0x%lx\n", p4d, p4d_val(*p4d));
-//     printk(KERN_INFO "Protection bits: %s%s%s\n", 
-//         (p4d_val(*p4d) & _PAGE_USER) ? "USER " : "", 
-//         (p4d_val(*p4d) & _PAGE_RW) ? "RW " : "RO ",
-//         (p4d_val(*p4d) & _PAGE_NX) ? "NO-EXEC" : "EXEC"); 
+    printk(KERN_INFO "if have p4d: %d\n", pgtable_l5_enabled());
+    p4d = p4d_offset(pgd, addr);
+    if(p4d_none(*p4d) || p4d_bad(*p4d)) {
+        printk(KERN_INFO "P4D invalid or not present for address 0x%lx\n", addr);
+         return 3;
+    }
+    printk(KERN_INFO "P4D found at %p, value: 0x%lx\n", p4d, p4d_val(*p4d));
+    printk(KERN_INFO "Protection bits: %s%s%s\n", 
+        (p4d_val(*p4d) & _PAGE_USER) ? "USER " : "", 
+        (p4d_val(*p4d) & _PAGE_RW) ? "RW " : "RO ",
+        (p4d_val(*p4d) & _PAGE_NX) ? "NO-EXEC" : "EXEC"); 
 
 
-//     pud = pud_offset(p4d, addr);
-//     if(pud_none(*pud) || pud_bad(*pud)) {
-//         printk(KERN_INFO "PUD invalid or not present for address 0x%lx\n", addr);
-//         return 4;
-//     }
-//     printk(KERN_INFO "PUD found at %px, value: 0x%lx\n", pud, pud_val(*pud));
-//     printk(KERN_INFO "Protection bits: %s%s%s\n", 
-//         (pud_val(*pud) & _PAGE_USER) ? "USER " : "", 
-//         (pud_val(*pud) & _PAGE_RW) ? "RW " : "RO ",
-//         (pud_val(*pud) & _PAGE_NX) ? "NO-EXEC" : "EXEC"); 
+    pud = pud_offset(p4d, addr);
+    if(pud_none(*pud) || pud_bad(*pud)) {
+        printk(KERN_INFO "PUD invalid or not present for address 0x%lx\n", addr);
+        return 4;
+    }
+    printk(KERN_INFO "PUD found at %p, value: 0x%lx\n", pud, pud_val(*pud));
+    printk(KERN_INFO "Protection bits: %s%s%s\n", 
+        (pud_val(*pud) & _PAGE_USER) ? "USER " : "", 
+        (pud_val(*pud) & _PAGE_RW) ? "RW " : "RO ",
+        (pud_val(*pud) & _PAGE_NX) ? "NO-EXEC" : "EXEC"); 
 
 
-//     pmd = pmd_offset(pud, addr);
-//     if(pmd_none(*pmd) || pmd_bad(*pmd)) {
-//         printk(KERN_INFO "PMD invalid or not present for address 0x%lx\n", addr);
-//         return 5;
-//     }
-//     printk(KERN_INFO "PMD found at %px, value: 0x%lx\n", pmd, pmd_val(*pmd));
-//     if(pmd_huge(*pmd)) {
-//         printk(KERN_INFO "This is a huge page mapping at PMD level\n");
-//         printk(KERN_INFO "PMD flags: %s %s %s\n", (pmd_val(*pmd) & _PAGE_USER) ? "USER " : "",
-//                                                     (pmd_val(*pmd) & _PAGE_RW) ? "RW " : "RO ",
-//                                                     (pmd_val(*pmd) & _PAGE_NX) ? "EXEC " : "NO-EXEC");
-//         return 6;
-//     }
-//     printk(KERN_INFO "Protection bits: %s%s%s\n", 
-//             (pmd_val(*pmd) & _PAGE_USER) ? "USER " : "", 
-//             (pmd_val(*pmd) & _PAGE_RW) ? "RW " : "RO ",
-//             (pmd_val(*pmd) & _PAGE_NX) ? "NO-EXEC" : "EXEC"); 
+    pmd = pmd_offset(pud, addr);
+    if(pmd_none(*pmd) || pmd_bad(*pmd)) {
+        printk(KERN_INFO "PMD invalid or not present for address 0x%lx\n", addr);
+        return 5;
+    }
+    printk(KERN_INFO "PMD found at %p, value: 0x%lx\n", pmd, pmd_val(*pmd));
+    if(pmd_huge(*pmd)) {
+        printk(KERN_INFO "This is a huge page mapping at PMD level\n");
+        printk(KERN_INFO "PMD flags: %s %s %s\n", (pmd_val(*pmd) & _PAGE_USER) ? "USER " : "",
+                                                    (pmd_val(*pmd) & _PAGE_RW) ? "RW " : "RO ",
+                                                    (pmd_val(*pmd) & _PAGE_NX) ? "EXEC " : "NO-EXEC");
+        return 6;
+    }
+    printk(KERN_INFO "Protection bits: %s%s%s\n", 
+            (pmd_val(*pmd) & _PAGE_USER) ? "USER " : "", 
+            (pmd_val(*pmd) & _PAGE_RW) ? "RW " : "RO ",
+            (pmd_val(*pmd) & _PAGE_NX) ? "NO-EXEC" : "EXEC"); 
     
     
-//     pte = pte_offset_map(pmd, addr);
-//     if(!pte) {
-//          printk(KERN_INFO "Filed to map PTE for address 0x%lx\n", addr);
-//         return 7;
-//     }
-//     if(pte_none(*pte)) {
-//         printk(KERN_INFO "PTE not present for address 0x%lx\n", addr);
-//         pte_unmap(pte);
-//          return 8;
-//     }
-//     printk(KERN_INFO "PTE found at %px, value: 0x%lx\n", pte, pte_val(*pte)); 
-//     printk(KERN_INFO "Page frame number: 0x%lx\n", pte_pfn(*pte)); 
-//     printk(KERN_INFO "Protection bits: %s%s%s\n", 
-//             (pte_val(*pte) & _PAGE_USER) ? "USER " : "", 
-//             (pte_val(*pte) & _PAGE_RW) ? "RW " : "RO ",
-//             (pte_val(*pte) & _PAGE_NX) ? "NO-EXEC" : "EXEC"); 
-//     if(!(pte_val(*pte) & _PAGE_PRESENT)) 
-//          printk(KERN_INFO "Warning: Page is not present!\n");
-//     pteval_t tmp_pte_val = pte_val(*pte);
-//     if(read_flag || write_flag) {
-//         tmp_pte_val |= _PAGE_RW;
-//     } else {
-//         tmp_pte_val &= (~_PAGE_RW);
-//     }
-//     if(exec_flag) {
-//         tmp_pte_val &= ~_PAGE_NX;
-//     } else {
-//         tmp_pte_val |= _PAGE_NX;
-//     }
-//     // 修改pfn
+    pte = pte_offset_map(pmd, addr);
+    if(!pte) {
+         printk(KERN_INFO "Filed to map PTE for address 0x%lx\n", addr);
+        return 7;
+    }
+    if(pte_none(*pte)) {
+        printk(KERN_INFO "PTE not present for address 0x%lx\n", addr);
+        pte_unmap(pte);
+         return 8;
+    }
+    printk(KERN_INFO "PTE found at %p, value: 0x%lx\n", pte, pte_val(*pte)); 
+    printk(KERN_INFO "Page frame number: 0x%lx\n", pte_pfn(*pte)); 
+    printk(KERN_INFO "Protection bits: %s%s%s\n", 
+            (pte_val(*pte) & _PAGE_USER) ? "USER " : "", 
+            (pte_val(*pte) & _PAGE_RW) ? "RW " : "RO ",
+            (pte_val(*pte) & _PAGE_NX) ? "NO-EXEC" : "EXEC"); 
+    if(!(pte_val(*pte) & _PAGE_PRESENT)) 
+         printk(KERN_INFO "Warning: Page is not present!\n");
+    pteval_t tmp_pte_val = pte_val(*pte);
+    if(read_flag || write_flag) {
+        tmp_pte_val |= _PAGE_RW;
+    } else {
+        tmp_pte_val &= (~_PAGE_RW);
+    }
+    if(exec_flag) {
+        tmp_pte_val &= ~_PAGE_NX;
+    } else {
+        tmp_pte_val |= _PAGE_NX;
+    }
 
-//     printk(KERN_INFO "tmp_pte_val: %lx", tmp_pte_val);
-//     tmp_pte_val &= PFN_CHANGE_MASK;
-//     printk(KERN_INFO "tmp_pte_val: %lx  (pfn << PAGE_SHIFT): %lx", tmp_pte_val, (pfn << PAGE_SHIFT));
-//     tmp_pte_val  = tmp_pte_val | (unsigned long)(pfn << PAGE_SHIFT);
-//     printk(KERN_INFO "tmp_pte_val: %lx", tmp_pte_val);
-//     pte->pte = tmp_pte_val;
+    // 修改pfn
+    printk(KERN_INFO "tmp_pte_val: 0x%lx", tmp_pte_val);
+    tmp_pte_val &= PFN_CHANGE_MASK;
+    printk(KERN_INFO "tmp_pte_val: 0x%lx  (pfn << PAGE_SHIFT): 0x%lx", tmp_pte_val, (pfn << PAGE_SHIFT));
+    tmp_pte_val  = tmp_pte_val | (unsigned long)(pfn << PAGE_SHIFT);
+    printk(KERN_INFO "tmp_pte_val: 0x%lx", tmp_pte_val);
+    pte->pte = tmp_pte_val;
 
-//     printk(KERN_INFO "again: Page frame number: 0x%lx\n", pte_pfn(*pte)); 
-//     printk(KERN_INFO "again: Protection bits: %s%s%s\n", 
-//             (pte_val(*pte) & _PAGE_USER) ? "USER " : "", 
-//             (pte_val(*pte) & _PAGE_RW) ? "RW " : "RO ",
-//             (pte_val(*pte) & _PAGE_NX) ? "NO-EXEC" : "EXEC"); 
-//     if(!(pte_val(*pte) & _PAGE_PRESENT)) 
-//          printk(KERN_INFO "again: Warning: Page is not present!\n");
-//     return -1;
-// }
+    printk(KERN_INFO "again: Page frame number: 0x%lx\n", pte_pfn(*pte)); 
+    printk(KERN_INFO "again: Protection bits: %s%s%s\n", 
+            (pte_val(*pte) & _PAGE_USER) ? "USER " : "", 
+            (pte_val(*pte) & _PAGE_RW) ? "RW " : "RO ",
+            (pte_val(*pte) & _PAGE_NX) ? "NO-EXEC" : "EXEC"); 
+    if(!(pte_val(*pte) & _PAGE_PRESENT)) 
+         printk(KERN_INFO "again: Warning: Page is not present!\n");
+    return -1;
+}
 
-// int get_phy_mem(void* user_ptr, void* kern_ptr)
-// {
-//     printk(KERN_INFO "%s\n", __func__);
+int get_phy_mem(void* user_ptr, void* kern_ptr)
+{
+    printk(KERN_INFO "%s\n", __func__);
 
-//     // get_page_table(user_ptr);
+    // get_page_table(user_ptr);
 
-//     printk(KERN_INFO "k: %lx  u:%lx\n", kern_ptr, user_ptr);
-//     struct page *page_ptr;
-//     get_user_pages(user_ptr, 1, FOLL_WRITE, &page_ptr, NULL);
-//     // printk(KERN_INFO "virt_to_phys  k: %lx  u1:%lx  u2:%lx\n", virt_to_phys(kern_ptr), virt_to_phys(user_ptr), page_to_phys(page_ptr));
-//     printk(KERN_INFO "vmalloc_to_pfn k: %lx\n", vmalloc_to_pfn(kern_ptr));
-//     unsigned char* kern_addr = (unsigned char*)kern_ptr;
-//     unsigned char user_addr[PAGE_SIZE];
-//     copy_from_user(user_addr, user_ptr, PAGE_SIZE);
-//     // int index = 0;
-//     // while(index < 100) {
-//     //     // printk(KERN_INFO "0x%02x 0x%02x\n", kern_addr[index], user_addr[index]);
-//     //     printk(KERN_INFO "index: %d  k:0x%02x u:0x%02x\n", index, kern_addr[index], user_addr[index]);
-//     //     index++;
-//     // }
-//     return 0;
-// }
+    printk(KERN_INFO "k: %lx  u:%lx\n", kern_ptr, user_ptr);
+    struct page *page_ptr;
+    get_user_pages(user_ptr, 1, FOLL_WRITE, &page_ptr, NULL);
+    // printk(KERN_INFO "virt_to_phys  k: 0x%lx  u1:0x%lx  u2:%lx\n", virt_to_phys(kern_ptr), virt_to_phys(user_ptr), page_to_phys(page_ptr));
+    printk(KERN_INFO "vmalloc_to_pfn k: 0x%lx   page_to_phys u: 0x%lx \n", vmalloc_to_pfn(kern_ptr), page_to_phys(page_ptr));
+    unsigned char* kern_addr = (unsigned char*)kern_ptr;
+    unsigned char user_addr[PAGE_SIZE];
+    copy_from_user(user_addr, user_ptr, PAGE_SIZE);
+    int index = 0;
+    while(index < 20) {
+        printk(KERN_INFO "index: %d  k:0x%02x u:0x%02x\n", index, kern_addr[index], user_addr[index]);
+        index++;
+    }
+    return 0;
+}
 
 void copy_fun(void __user* dest, void* src, size_t size, size_t offset)
 {
@@ -332,7 +331,7 @@ void copy_fun(void __user* dest, void* src, size_t size, size_t offset)
     // a = test_fun(a);
     size_t page_num = (size + PAGE_SIZE - 1) / PAGE_SIZE;
     size_t bytes = PAGE_SIZE * page_num;
-    printk(KERN_INFO "SRC: %lx  dest: %lx  page_num: %d  offset:%d\n", src, dest, page_num, offset);
+    printk(KERN_INFO "SRC: 0x%lx  dest: 0x%lx  page_num: %d  offset:%d\n", src, dest, page_num, offset);
 
     // get_page_table(dest);
     if(!access_ok(dest, bytes)) {
@@ -385,17 +384,17 @@ static void netlink_rcv_msg(struct sk_buff *skb)
     }
     // get_page_table(request->addr);
     unsigned long virt_addr = (unsigned long)test_fun;
-    printk("test_fun virt addr: %lx  virt_to_phys: %lx  vmalloc_to_pfn: %lx\n", virt_addr, virt_to_phys(test_fun), vmalloc_to_pfn(test_fun));
+    printk("test_fun virt addr: 0x%lx  virt_to_phys: 0x%lx  vmalloc_to_pfn: 0x%lx\n", virt_addr, virt_to_phys(test_fun), vmalloc_to_pfn(test_fun));
     // printk("get_page_table() ret: %d\n", get_page_table(request->addr));
     unsigned long pfn = (unsigned long)vmalloc_to_pfn(test_fun);
 
-    printk(KERN_INFO "PFN: %lx\n", pfn);
-    // printk("modify_page_table() ret: %d\n", modify_page_table(request->addr, pfn, 1, 0, 1)); // virt_addr, pfn, read_flag, write_flag, exec_flag
+    printk(KERN_INFO "PFN: 0x%lx\n", pfn);
+    printk("modify_page_table() ret: %d\n", modify_page_table(request->addr, pfn, 1, 0, 1)); // virt_addr, pfn, read_flag, write_flag, exec_flag
     // flush_tlb_page(find_vma(current->mm, request->addr), srequest->addr);
     // copy_fun(request->addr, test_fun, FUN_SIZE, FUN_OFFSET);
     // 按照一页进行拷贝
-    // get_phy_mem(request->addr, virt_addr & PAGE_MASK );
-    copy_fun(request->addr, virt_addr & PAGE_MASK, FUN_SIZE, FUN_OFFSET);
+    get_phy_mem(request->addr, virt_addr & PAGE_MASK);
+    // copy_fun(request->addr, virt_addr & PAGE_MASK, FUN_SIZE, FUN_OFFSET);
     // get_phy_mem(request->addr, virt_addr & PAGE_MASK);
 }
 
@@ -410,7 +409,7 @@ struct netlink_kernel_cfg cfg = {
 static int __init remap_pfn_init(void)
 {
 	int ret = 0;
-    // ret = test_fun(10);
+    ret = test_fun(10);
     printk(KERN_INFO "ret: %d\n", ret);
 
     netlinkfd = (struct sock*)netlink_kernel_create(&init_net,  NETLINK_TEST, &cfg);

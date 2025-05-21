@@ -161,6 +161,9 @@ int main(int argc, const char *argv[])
 		printf("0x%02x\n", array[index]);
 		index++;
 	}
+	while(1) {
+		sleep(5);
+	}
 	test_fun(10);
 	printf("%d\n", fun(10));
 	// while(1)
