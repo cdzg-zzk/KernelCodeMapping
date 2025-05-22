@@ -21,13 +21,11 @@
 #define NETLINK_TEST 17
 #define BUF_SIZE (1*PAGE_SIZE)
 
-#define PFN_CHANGE_MASK 0xFFF0000000000FFF
+#define PFN_CHANGE_MASK 0xFFF8000000000FFF
 
 #define FUN_SIZE 100
 #define FUN_OFFSET 0x0
 
-static int count = 0;
-static void *kbuff;
 
 typedef struct {
     unsigned long addr;
@@ -91,101 +89,107 @@ int pmd_huge(pmd_t pmd)
     return !pmd_none(pmd) && 
             (pmd_val(pmd) & (_PAGE_PRESENT|_PAGE_PSE)) != _PAGE_PRESENT;
 }
-// int get_page_table(unsigned long addr)
-// {
-//     // test_fun(15);
-//     printk(KERN_INFO "START_%d\n", count);
-//     count++;
-//     pgd_t *pgd;
-//     p4d_t *p4d;
-//     pud_t *pud;
-//     pmd_t *pmd;
-//     pte_t *pte;
-//     struct mm_struct *mm = current->mm;
-//     printk(KERN_INFO "current->pid is %d\n", current->pid);   // 检查PGD是否一致，虽然一致，但是还挺重要的
-//     if(!mm) {
-//         printk(KERN_ERR "No mm_struct for current process\n");
-//         return 1;
-//     }
-//     pgd = pgd_offset(mm, addr);
-//     if(pgd_none(*pgd) || pgd_bad(*pgd)) {
-//         printk(KERN_INFO "PGD invalid or not present for address 0x%lx\n", addr);
-//          return 2;
-//     }
-//     printk(KERN_INFO "PGD found at %px, value: 0x%lx\n", pgd, pgd_val(*pgd));
-//      printk(KERN_INFO "Protection bits: %s%s%s\n", 
-//         (pgd_val(*pgd) & _PAGE_USER) ? "USER " : "", 
-//         (pgd_val(*pgd) & _PAGE_RW) ? "RW " : "RO ",
-//         (pgd_val(*pgd) & _PAGE_NX) ? "NO-EXEC" : "EXEC"); 
+int get_page_table(unsigned long addr)
+{
+    printk(KERN_INFO "%s\n", __func__);
+    printk(KERN_INFO "%lx\n", addr);
+
+    pgd_t *pgd;
+    p4d_t *p4d;
+    pud_t *pud;
+    pmd_t *pmd;
+    pte_t *pte;
+    struct mm_struct *mm = current->mm;
+    printk(KERN_INFO "current->pid is %d   addr: %lx    mm: %p\n", current->pid, addr, mm);   // 检查PGD是否一致，虽然一致，但是还挺重要的
+    if(!mm) {
+        printk(KERN_ERR "No mm_struct for current process\n");
+        return 1;
+    }
+    pgd = pgd_offset(mm, addr);
+    if(pgd_none(*pgd) || pgd_bad(*pgd)) {
+        printk(KERN_INFO "PGD invalid or not present for address 0x%lx\n", addr);
+         return 2;
+    }
+    printk(KERN_INFO "PGD found at %p, value: 0x%lx\n", pgd, pgd_val(*pgd));
+     printk(KERN_INFO "Protection bits: %s%s%s\n", 
+        (pgd_val(*pgd) & _PAGE_USER) ? "USER " : "", 
+        (pgd_val(*pgd) & _PAGE_RW) ? "RW " : "RO ",
+        (pgd_val(*pgd) & _PAGE_NX) ? "NO-EXEC" : "EXEC"); 
 
 
-//     printk(KERN_INFO "if have p4d: %d\n", pgtable_l5_enabled());
-//     p4d = p4d_offset(pgd, addr);
-//     if(p4d_none(*p4d) || p4d_bad(*p4d)) {
-//         printk(KERN_INFO "P4D invalid or not present for address 0x%lx\n", addr);
-//          return 3;
-//     }
-//     printk(KERN_INFO "P4D found at %px, value: 0x%lx\n", p4d, p4d_val(*p4d));
-//     printk(KERN_INFO "Protection bits: %s%s%s\n", 
-//         (p4d_val(*p4d) & _PAGE_USER) ? "USER " : "", 
-//          (p4d_val(*p4d) & _PAGE_RW) ? "RW " : "RO ",
-//         (p4d_val(*p4d) & _PAGE_NX) ? "NO-EXEC" : "EXEC"); 
+    printk(KERN_INFO "if have p4d: %d\n", pgtable_l5_enabled());
+    p4d = p4d_offset(pgd, addr);
+    if(p4d_none(*p4d) || p4d_bad(*p4d)) {
+        printk(KERN_INFO "P4D invalid or not present for address 0x%lx\n", addr);
+         return 3;
+    }
+    printk(KERN_INFO "P4D found at %p, value: 0x%lx\n", p4d, p4d_val(*p4d));
+    printk(KERN_INFO "Protection bits: %s%s%s\n", 
+        (p4d_val(*p4d) & _PAGE_USER) ? "USER " : "", 
+         (p4d_val(*p4d) & _PAGE_RW) ? "RW " : "RO ",
+        (p4d_val(*p4d) & _PAGE_NX) ? "NO-EXEC" : "EXEC"); 
 
 
-//     pud = pud_offset(p4d, addr);
-//     if(pud_none(*pud) || pud_bad(*pud)) {
-//         printk(KERN_INFO "PUD invalid or not present for address 0x%lx\n", addr);
-//         return 4;
-//     }
-//     printk(KERN_INFO "PUD found at %px, value: 0x%lx\n", pud, pud_val(*pud));
-//     printk(KERN_INFO "Protection bits: %s%s%s\n", 
-//         (pud_val(*pud) & _PAGE_USER) ? "USER " : "", 
-//         (pud_val(*pud) & _PAGE_RW) ? "RW " : "RO ",
-//         (pud_val(*pud) & _PAGE_NX) ? "NO-EXEC" : "EXEC"); 
+    pud = pud_offset(p4d, addr);
+    if(pud_none(*pud) || pud_bad(*pud)) {
+        printk(KERN_INFO "PUD invalid or not present for address 0x%lx\n", addr);
+        return 4;
+    }
+    printk(KERN_INFO "PUD found at %p, value: 0x%lx\n", pud, pud_val(*pud));
+    printk(KERN_INFO "Protection bits: %s%s%s\n", 
+        (pud_val(*pud) & _PAGE_USER) ? "USER " : "", 
+        (pud_val(*pud) & _PAGE_RW) ? "RW " : "RO ",
+        (pud_val(*pud) & _PAGE_NX) ? "NO-EXEC" : "EXEC"); 
 
 
-//     pmd = pmd_offset(pud, addr);
-//     if(pmd_none(*pmd) || pmd_bad(*pmd)) {
-//         printk(KERN_INFO "PMD invalid or not present for address 0x%lx\n", addr);
-//         return 5;
-//     }
-//     printk(KERN_INFO "PMD found at %px, value: 0x%lx\n", pmd, pmd_val(*pmd));
-//     if(pmd_huge(*pmd)) {
-//         printk(KERN_INFO "This is a huge page mapping at PMD level\n");
-//         printk(KERN_INFO "PMD flags: %s %s %s\n", (pmd_val(*pmd) & _PAGE_USER) ? "USER " : "",
-//                                                     (pmd_val(*pmd) & _PAGE_RW) ? "RW " : "RO ",
-//                                                     (pmd_val(*pmd) & _PAGE_NX) ? "EXEC " : "NO-EXEC");
-//         return 6;
-//     }
-//     printk(KERN_INFO "Protection bits: %s%s%s\n", 
-//             (pmd_val(*pmd) & _PAGE_USER) ? "USER " : "", 
-//             (pmd_val(*pmd) & _PAGE_RW) ? "RW " : "RO ",
-//             (pmd_val(*pmd) & _PAGE_NX) ? "NO-EXEC" : "EXEC"); 
+    pmd = pmd_offset(pud, addr);
+    if(pmd_none(*pmd) || pmd_bad(*pmd)) {
+        printk(KERN_INFO "PMD invalid or not present for address 0x%lx\n", addr);
+        return 5;
+    }
+    printk(KERN_INFO "PMD found at %p, value: 0x%lx\n", pmd, pmd_val(*pmd));
+    if(pmd_huge(*pmd)) {
+        printk(KERN_INFO "This is a huge page mapping at PMD level\n");
+        printk(KERN_INFO "PMD flags: %s %s %s\n", (pmd_val(*pmd) & _PAGE_USER) ? "USER " : "",
+                                                    (pmd_val(*pmd) & _PAGE_RW) ? "RW " : "RO ",
+                                                    (pmd_val(*pmd) & _PAGE_NX) ? "EXEC " : "NO-EXEC");
+        return 6;
+    }
+    printk(KERN_INFO "Protection bits: %s%s%s\n", 
+            (pmd_val(*pmd) & _PAGE_USER) ? "USER " : "", 
+            (pmd_val(*pmd) & _PAGE_RW) ? "RW " : "RO ",
+            (pmd_val(*pmd) & _PAGE_NX) ? "NO-EXEC" : "EXEC"); 
     
     
-//     pte = pte_offset_map(pmd, addr);
-//     if(!pte) {
-//          printk(KERN_INFO "Filed to map PTE for address 0x%lx\n", addr);
-//         return 7;
-//     }
-//     if(pte_none(*pte)) {
-//         printk(KERN_INFO "PTE not present for address 0x%lx\n", addr);
-//         pte_unmap(pte);
-//          return 8;
-//     }
-//     printk(KERN_INFO "PTE found at %px, value: 0x%lx\n", pte, pte_val(*pte)); 
-//     printk(KERN_INFO "Page frame number: 0x%lx\n", pte_pfn(*pte)); 
-//     printk(KERN_INFO "Protection bits: %s%s%s\n", 
-//             (pte_val(*pte) & _PAGE_USER) ? "USER " : "", 
-//             (pte_val(*pte) & _PAGE_RW) ? "RW " : "RO ",
-//             (pte_val(*pte) & _PAGE_NX) ? "NO-EXEC" : "EXEC"); 
-//     if (!(pte_val(*pte) & _PAGE_PRESENT)) 
-//          printk(KERN_INFO "Warning: Page is not present!\n");
+    pte = pte_offset_map(pmd, addr);
+    if(!pte) {
+         printk(KERN_INFO "Filed to map PTE for address 0x%lx\n", addr);
+        return 7;
+    }
+    if(pte_none(*pte)) {
+        printk(KERN_INFO "PTE not present for address 0x%lx\n", addr);
+        pte_unmap(pte);
+         return 8;
+    }
+    printk(KERN_INFO "PTE found at %p, value: 0x%lx\n", pte, pte_val(*pte)); 
+    printk(KERN_INFO "Page frame number: 0x%lx\n", pte_pfn(*pte)); 
+    printk(KERN_INFO "Protection bits: %s%s%s\n", 
+            (pte_val(*pte) & _PAGE_USER) ? "USER " : "", 
+            (pte_val(*pte) & _PAGE_RW) ? "RW " : "RO ",
+            (pte_val(*pte) & _PAGE_NX) ? "NO-EXEC" : "EXEC"); 
+    if (!(pte_val(*pte) & _PAGE_PRESENT)) 
+         printk(KERN_INFO "Warning: Page is not present!\n");
 
-//     // test_fun(15);
-//     return -1;
-// }
+    return -1;
+}
 // EXPORT_SYMBOL(get_page_table);
+
+// 使用内联汇编直接执行TLB刷新
+static inline void flush_tlb_one(unsigned long addr)
+{
+    asm volatile("invlpg (%0)" ::"r" (addr) : "memory");
+}
+
 int modify_page_table(unsigned long addr, unsigned long pfn, bool read_flag, bool write_flag, bool exec_flag)
 {
     printk(KERN_INFO "%s\n", __func__);
@@ -195,6 +199,7 @@ int modify_page_table(unsigned long addr, unsigned long pfn, bool read_flag, boo
     pmd_t *pmd;
     pte_t *pte;
     struct mm_struct *mm = current->mm;
+    printk(KERN_INFO "current->pid is %d   addr: %lx    mm: %p\n", current->pid, addr, mm);   // 检查PGD是否一致，虽然一致，但是还挺重要的
     if(!mm) {
         printk(KERN_ERR "No mm_struct for current process\n");
         return 1;
@@ -274,46 +279,65 @@ int modify_page_table(unsigned long addr, unsigned long pfn, bool read_flag, boo
     if(!(pte_val(*pte) & _PAGE_PRESENT)) 
          printk(KERN_INFO "Warning: Page is not present!\n");
     pteval_t tmp_pte_val = pte_val(*pte);
-    if(read_flag || write_flag) {
+    printk(KERN_INFO "原始 pte_val: 0x%lx", tmp_pte_val);
+    // 保持PRESENT位
+    tmp_pte_val |= _PAGE_PRESENT;
+    // 根据传入的标志位修改读写权限
+    if(read_flag) {
+        tmp_pte_val |= _PAGE_USER;  // 设置用户可访问
+    } else {
+        tmp_pte_val &= ~_PAGE_USER;
+    }
+    
+    if(write_flag) {
         tmp_pte_val |= _PAGE_RW;
     } else {
-        tmp_pte_val &= (~_PAGE_RW);
+        tmp_pte_val &= ~_PAGE_RW;
     }
+    // 根据传入的标志位修改执行权限
     if(exec_flag) {
         tmp_pte_val &= ~_PAGE_NX;
     } else {
         tmp_pte_val |= _PAGE_NX;
     }
 
-    // 修改pfn
-    printk(KERN_INFO "tmp_pte_val: 0x%lx", tmp_pte_val);
+
+    
+    // 清除原有的物理页帧号位,保留修改后的权限位
     tmp_pte_val &= PFN_CHANGE_MASK;
-    printk(KERN_INFO "tmp_pte_val: 0x%lx  (pfn << PAGE_SHIFT): 0x%lx", tmp_pte_val, (pfn << PAGE_SHIFT));
-    tmp_pte_val  = tmp_pte_val | (unsigned long)(pfn << PAGE_SHIFT);
-    printk(KERN_INFO "tmp_pte_val: 0x%lx", tmp_pte_val);
+
+    
+    // 设置新的物理页帧号
+    tmp_pte_val |= (unsigned long)(pfn << PAGE_SHIFT);
+    
+    printk(KERN_INFO "新的 pte_val: 0x%lx", tmp_pte_val);
     pte->pte = tmp_pte_val;
 
-    printk(KERN_INFO "again: Page frame number: 0x%lx\n", pte_pfn(*pte)); 
-    printk(KERN_INFO "again: Protection bits: %s%s%s\n", 
-            (pte_val(*pte) & _PAGE_USER) ? "USER " : "", 
+    // 验证修改结果
+    printk(KERN_INFO "修改后的页帧号: 0x%lx\n", pte_pfn(*pte));
+    printk(KERN_INFO "修改后的权限位: %s%s%s\n",
+            (pte_val(*pte) & _PAGE_USER) ? "USER " : "",
             (pte_val(*pte) & _PAGE_RW) ? "RW " : "RO ",
             (pte_val(*pte) & _PAGE_NX) ? "NO-EXEC" : "EXEC"); 
     if(!(pte_val(*pte) & _PAGE_PRESENT)) 
          printk(KERN_INFO "again: Warning: Page is not present!\n");
+    
+    set_pte(pte, __pte(tmp_pte_val));
+    // 刷新这个地址的TLB
+    flush_tlb_one(addr);
+    pte_unmap(pte);
     return -1;
 }
 
 int get_phy_mem(void* user_ptr, void* kern_ptr)
 {
     printk(KERN_INFO "%s\n", __func__);
-
-    // get_page_table(user_ptr);
-
-    printk(KERN_INFO "k: %lx  u:%lx\n", kern_ptr, user_ptr);
-    struct page *page_ptr;
-    get_user_pages(user_ptr, 1, FOLL_WRITE, &page_ptr, NULL);
-    // printk(KERN_INFO "virt_to_phys  k: 0x%lx  u1:0x%lx  u2:%lx\n", virt_to_phys(kern_ptr), virt_to_phys(user_ptr), page_to_phys(page_ptr));
-    printk(KERN_INFO "vmalloc_to_pfn k: 0x%lx   page_to_phys u: 0x%lx \n", vmalloc_to_pfn(kern_ptr), page_to_phys(page_ptr));
+    struct page* user_page;
+    int ret = get_user_pages_fast((unsigned long)user_ptr, 1, FOLL_WRITE, &user_page);
+    if (ret <= 0) {
+        printk(KERN_ERR "获取用户空间页失败\n");
+        return -1;
+    }
     unsigned char* kern_addr = (unsigned char*)kern_ptr;
     unsigned char user_addr[PAGE_SIZE];
     copy_from_user(user_addr, user_ptr, PAGE_SIZE);
@@ -322,6 +346,7 @@ int get_phy_mem(void* user_ptr, void* kern_ptr)
         printk(KERN_INFO "index: %d  k:0x%02x u:0x%02x\n", index, kern_addr[index], user_addr[index]);
         index++;
     }
+    put_page(user_page);
     return 0;
 }
 
@@ -389,13 +414,15 @@ static void netlink_rcv_msg(struct sk_buff *skb)
     unsigned long pfn = (unsigned long)vmalloc_to_pfn(test_fun);
 
     printk(KERN_INFO "PFN: 0x%lx\n", pfn);
+    get_page_table(request->addr);
     printk("modify_page_table() ret: %d\n", modify_page_table(request->addr, pfn, 1, 0, 1)); // virt_addr, pfn, read_flag, write_flag, exec_flag
     // flush_tlb_page(find_vma(current->mm, request->addr), srequest->addr);
     // copy_fun(request->addr, test_fun, FUN_SIZE, FUN_OFFSET);
     // 按照一页进行拷贝
+    get_page_table(request->addr);
     get_phy_mem(request->addr, virt_addr & PAGE_MASK);
     // copy_fun(request->addr, virt_addr & PAGE_MASK, FUN_SIZE, FUN_OFFSET);
-    // get_phy_mem(request->addr, virt_addr & PAGE_MASK);
+
 }
 
 struct netlink_kernel_cfg cfg = {
