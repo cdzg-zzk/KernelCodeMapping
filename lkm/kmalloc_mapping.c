@@ -13,6 +13,8 @@
 #include <asm/pgtable_types.h>
 #include <asm/tlbflush.h>
 #include <linux/kallsyms.h>
+#include <linux/rmap.h>
+#include <linux/mm_types.h>
 
 #include <linux/types.h>
 #include <net/sock.h>
@@ -182,7 +184,62 @@ int get_page_table(unsigned long addr)
 
     return -1;
 }
-// EXPORT_SYMBOL(get_page_table);
+
+
+void get_pages(unsigned long addr, unsigned long kern_addr)
+{
+    printk(KERN_INFO "%s\n", __func__);
+
+    struct page* kern_page = vmalloc_to_page((void*)kern_addr);
+    struct page* user_page;
+    int ret;
+
+    ret = get_user_pages_fast(addr, 1, FOLL_WRITE, &user_page);
+    if (ret <= 0) {
+        printk(KERN_ERR "获取用户空间页失败\n");
+        return;
+    }
+
+    // 打印修改前的页面信息
+    printk(KERN_INFO "user_page: %p, flags: %lx, mapping: %p, index: %lx, mapcount: %d, refcount: %d\n",
+           user_page, user_page->flags, user_page->mapping, user_page->index, 
+           user_page->_mapcount.counter, user_page->_refcount.counter);
+    printk(KERN_INFO "kern_page: %p, flags: %lx, mapping: %p, index: %lx, mapcount: %d, refcount: %d\n",
+           kern_page, kern_page->flags, kern_page->mapping, kern_page->index,
+           kern_page->_mapcount.counter, kern_page->_refcount.counter);
+}
+
+void modify_pages(unsigned long addr, unsigned long kern_addr)
+{
+    printk(KERN_INFO "%s\n", __func__);
+
+    struct page* kern_page = vmalloc_to_page((void*)kern_addr);
+    struct page* user_page;
+    int ret;
+
+    ret = get_user_pages_fast(addr, 1, FOLL_WRITE, &user_page);
+    if (ret <= 0) {
+        printk(KERN_ERR "获取用户空间页失败\n");
+        return;
+    }
+    // 1. 先解除原页面映射
+    // page_remove_rmap(user_page, false);
+    put_page(user_page);  // 减少原页面的引用计数
+
+    // 2. 建立新页面映射
+    get_page(kern_page);  // 增加新页面的引用计数
+    // page_add_file_rmap(kern_page, false);
+    atomic_long_add_return(1, &current->mm->rss_stat.count[MM_FILEPAGES]);
+    atomic_long_sub_return(1, &current->mm->rss_stat.count[MM_ANONPAGES]);
+    // current->mm->rss_stat.count[MM_FILEPAGES] = current->mm->rss_stat.count[MM_FILEPAGES] + 1;
+    // current->mm->rss_stat.count[MM_ANONPAGES] = current->mm->rss_stat.count[MM_ANONPAGES] - 1;
+    // 3. 更新内存统计
+    // dec_mm_counter(current->mm, MM_ANONPAGES);
+    // inc_mm_counter(current->mm, MM_FILEPAGES);
+
+    // 打印修改后的页面信息
+    get_pages(addr, kern_addr);
+}
 
 // 使用内联汇编直接执行TLB刷新
 static inline void flush_tlb_one(unsigned long addr)
@@ -190,8 +247,9 @@ static inline void flush_tlb_one(unsigned long addr)
     asm volatile("invlpg (%0)" ::"r" (addr) : "memory");
 }
 
-int modify_page_table(unsigned long addr, unsigned long pfn, bool read_flag, bool write_flag, bool exec_flag)
+int modify_page_table(unsigned long addr, unsigned long kern_addr, bool read_flag, bool write_flag, bool exec_flag)
 {
+    get_pages(addr, kern_addr);
     printk(KERN_INFO "%s\n", __func__);
     pgd_t *pgd;
     p4d_t *p4d;
@@ -308,6 +366,7 @@ int modify_page_table(unsigned long addr, unsigned long pfn, bool read_flag, boo
 
     
     // 设置新的物理页帧号
+    unsigned long pfn = vmalloc_to_pfn((void*)kern_addr);
     tmp_pte_val |= (unsigned long)(pfn << PAGE_SHIFT);
     
     printk(KERN_INFO "新的 pte_val: 0x%lx", tmp_pte_val);
@@ -323,6 +382,8 @@ int modify_page_table(unsigned long addr, unsigned long pfn, bool read_flag, boo
          printk(KERN_INFO "again: Warning: Page is not present!\n");
     
     set_pte(pte, __pte(tmp_pte_val));
+
+    modify_pages(addr, kern_addr);
     // 刷新这个地址的TLB
     flush_tlb_one(addr);
     pte_unmap(pte);
@@ -358,7 +419,6 @@ void copy_fun(void __user* dest, void* src, size_t size, size_t offset)
     size_t bytes = PAGE_SIZE * page_num;
     printk(KERN_INFO "SRC: 0x%lx  dest: 0x%lx  page_num: %d  offset:%d\n", src, dest, page_num, offset);
 
-    // get_page_table(dest);
     if(!access_ok(dest, bytes)) {
         printk(KERN_ERR "user space cannot access\n");
         return;
@@ -407,19 +467,19 @@ static void netlink_rcv_msg(struct sk_buff *skb)
     } else {
         printk("%s error skb, length: %d\n", __func__, skb->len);
     }
-    // get_page_table(request->addr);
     unsigned long virt_addr = (unsigned long)test_fun;
     printk("test_fun virt addr: 0x%lx  virt_to_phys: 0x%lx  vmalloc_to_pfn: 0x%lx\n", virt_addr, virt_to_phys(test_fun), vmalloc_to_pfn(test_fun));
-    // printk("get_page_table() ret: %d\n", get_page_table(request->addr));
     unsigned long pfn = (unsigned long)vmalloc_to_pfn(test_fun);
 
     printk(KERN_INFO "PFN: 0x%lx\n", pfn);
     get_page_table(request->addr);
-    printk("modify_page_table() ret: %d\n", modify_page_table(request->addr, pfn, 1, 0, 1)); // virt_addr, pfn, read_flag, write_flag, exec_flag
+    // get_pages(request->addr, virt_addr);
+    printk("modify_page_table() ret: %d\n", modify_page_table(request->addr, virt_addr, 1, 1, 1)); // virt_addr, pfn, read_flag, write_flag, exec_flag
+    // get_pages(request->addr, virt_addr);
     // flush_tlb_page(find_vma(current->mm, request->addr), srequest->addr);
     // copy_fun(request->addr, test_fun, FUN_SIZE, FUN_OFFSET);
     // 按照一页进行拷贝
-    get_page_table(request->addr);
+    // get_page_table(request->addr);
     get_phy_mem(request->addr, virt_addr & PAGE_MASK);
     // copy_fun(request->addr, virt_addr & PAGE_MASK, FUN_SIZE, FUN_OFFSET);
 

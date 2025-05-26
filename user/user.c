@@ -22,7 +22,7 @@
 
 #define JUMP_OFFSET (0xd555f207)
 
-#define FUN_OFFSET (0x80)
+#define FUN_OFFSET (0xa0)
 typedef struct {
     unsigned long addr;
 } user_request_t;
@@ -86,7 +86,8 @@ int main(int argc, const char *argv[])
 	}
 	printf("ADDR: %lx\n", (unsigned long)addr);
     printf("pid: %d\n", getpid());
-	*(char*)addr = 'z';
+	// memcpy(addr, "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz\0", 50);
+	// printf("string: %s\n", addr);
 	// netlink
 	struct sockaddr_nl src_addr, dest_addr;
 	int skfd, ret, rxlen = sizeof(struct sockaddr_nl);
@@ -145,7 +146,6 @@ int main(int argc, const char *argv[])
 	}
 	memcpy(&response, NLMSG_DATA(nlh), sizeof(kernel_response_t));
 
-
 	// test_fun test
 	fun_ptr fun = (fun_ptr)(addr + FUN_OFFSET);
 	// build jmp table
@@ -161,9 +161,9 @@ int main(int argc, const char *argv[])
 		printf("0x%02x\n", array[index]);
 		index++;
 	}
-	while(1) {
-		sleep(5);
-	}
+	// while(1) {
+	// 	sleep(5);
+	// }
 	test_fun(10);
 	printf("%d\n", fun(10));
 	// while(1)
