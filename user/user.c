@@ -86,8 +86,8 @@ int main(int argc, const char *argv[])
 	}
 	printf("ADDR: %lx\n", (unsigned long)addr);
     printf("pid: %d\n", getpid());
-	// memcpy(addr, "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz\0", 50);
-	// printf("string: %s\n", addr);
+	memcpy(addr, "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz\0", 50);
+	printf("string: %s\n", addr);
 	// netlink
 	struct sockaddr_nl src_addr, dest_addr;
 	int skfd, ret, rxlen = sizeof(struct sockaddr_nl);

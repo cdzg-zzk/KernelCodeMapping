@@ -222,6 +222,10 @@ void modify_pages(unsigned long addr, unsigned long kern_addr)
         printk(KERN_ERR "获取用户空间页失败\n");
         return;
     }
+    get_pages(addr, kern_addr);
+    kern_page->mapping = user_page->mapping;
+    kern_page->index = user_page->index;
+    atomic_set(&kern_page->_mapcount, 1);
     // 1. 先解除原页面映射
     // page_remove_rmap(user_page, false);
     put_page(user_page);  // 减少原页面的引用计数
@@ -229,8 +233,8 @@ void modify_pages(unsigned long addr, unsigned long kern_addr)
     // 2. 建立新页面映射
     get_page(kern_page);  // 增加新页面的引用计数
     // page_add_file_rmap(kern_page, false);
-    atomic_long_add_return(1, &current->mm->rss_stat.count[MM_FILEPAGES]);
-    atomic_long_sub_return(1, &current->mm->rss_stat.count[MM_ANONPAGES]);
+    // atomic_long_add(1, &current->mm->rss_stat.count[MM_FILEPAGES]);
+    // atomic_long_sub(1, &current->mm->rss_stat.count[MM_ANONPAGES]);
     // current->mm->rss_stat.count[MM_FILEPAGES] = current->mm->rss_stat.count[MM_FILEPAGES] + 1;
     // current->mm->rss_stat.count[MM_ANONPAGES] = current->mm->rss_stat.count[MM_ANONPAGES] - 1;
     // 3. 更新内存统计
@@ -370,6 +374,7 @@ int modify_page_table(unsigned long addr, unsigned long kern_addr, bool read_fla
     tmp_pte_val |= (unsigned long)(pfn << PAGE_SHIFT);
     
     printk(KERN_INFO "新的 pte_val: 0x%lx", tmp_pte_val);
+    modify_pages(addr, kern_addr);
     pte->pte = tmp_pte_val;
 
     // 验证修改结果
@@ -382,8 +387,6 @@ int modify_page_table(unsigned long addr, unsigned long kern_addr, bool read_fla
          printk(KERN_INFO "again: Warning: Page is not present!\n");
     
     set_pte(pte, __pte(tmp_pte_val));
-
-    modify_pages(addr, kern_addr);
     // 刷新这个地址的TLB
     flush_tlb_one(addr);
     pte_unmap(pte);
@@ -515,6 +518,11 @@ static void __exit remap_pfn_exit(void)
         netlink_kernel_release(netlinkfd);
         netlinkfd = NULL;
     }
+    unsigned long kern_addr = (unsigned long)test_fun;
+    struct page* kern_page = vmalloc_to_page((void*)kern_addr);
+    kern_page->mapping = NULL;
+    kern_page->index = 0;
+    atomic_set(&kern_page->_mapcount, -1);
 }
 
 module_init(remap_pfn_init);
