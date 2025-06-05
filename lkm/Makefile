@@ -16,4 +16,4 @@ update:
 	@echo "Inserting kmalloc_mapping module..."
 	sudo insmod kmalloc_mapping.ko
 	sudo ../disassemble/gdb_disasseble.sh kmalloc_mapping
-	sudo objdump -d -r  kmalloc_mapping.ko > ../disassemble/disassemble.txt
+	sudo objdump -d -r  kmalloc_mapping.ko > ../disassemble/kmalloc_mapping_disassemble.txt

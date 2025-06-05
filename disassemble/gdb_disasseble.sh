@@ -6,7 +6,7 @@ VMLINUX_PATH="/boot/vmlinuz-$(uname -r)"  # 可调整
 DUMP_SIZE=0x1000  # 可调整
 TMP_GDB_SCRIPT="dump.gdb"
 TEXT_BIN="text_section.bin"
-DISASM_OUT="$(dirname "$0")/disassembly.txt"
+DISASM_OUT="$(dirname "$0")/${MODNAME}_disassembly.txt"
 
 # 自动清理 GDB 脚本
 trap 'rm -f "$TMP_GDB_SCRIPT"' EXIT

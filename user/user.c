@@ -79,15 +79,16 @@ int main(int argc, const char *argv[])
 {
 	char *addr = NULL;
 
-	addr = mmap(NULL, BUF_SIZE, PROT_READ | PROT_WRITE | PROT_EXEC, MAP_PRIVATE | MAP_ANONYMOUS , -1, OFFSET);    // 这里不能是SHARED
+	// addr = mmap(NULL, BUF_SIZE, PROT_READ |  PROT_EXEC, MAP_PRIVATE | MAP_ANONYMOUS , -1, OFFSET);
+	addr = mmap(NULL, BUF_SIZE, PROT_READ | PROT_WRITE | PROT_EXEC, MAP_PRIVATE | MAP_ANONYMOUS , -1, OFFSET);
 	if (!addr) {
 		perror("mmap failed\n");
 		exit(-1);
 	}
 	printf("ADDR: %lx\n", (unsigned long)addr);
     printf("pid: %d\n", getpid());
-	memcpy(addr, "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz\0", 50);
-	printf("string: %s\n", addr);
+	// memcpy(addr, "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz\0", 50);
+	// printf("string: %s\n", addr);
 	// netlink
 	struct sockaddr_nl src_addr, dest_addr;
 	int skfd, ret, rxlen = sizeof(struct sockaddr_nl);
